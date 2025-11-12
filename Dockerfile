@@ -1,6 +1,6 @@
-# 1. 최신의 안정적인 베이스 이미지를 사용합니다.
-# Python 3.13 + Debian 12 "Bookworm" (Stable)
-FROM python:3.13-slim-bookworm
+# 1. 의도적으로 오래된 (따라서 취약한) 베이스 이미지를 사용합니다.
+# Python 3.7 (EOL) + Debian 10 "Buster" (Old Stable)
+FROM python:3.7-slim-buster
 
 # 2. 작업 디렉토리 설정
 WORKDIR /app
