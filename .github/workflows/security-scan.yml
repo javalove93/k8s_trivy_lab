@@ -1,0 +1,43 @@
+name: Security Scan CI
+
+on:
+  # 'main' 브랜치에 코드가 push 될 때마다 이 워크플로우를 실행합니다.
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-scan:
+    # 가상 환경은 최신 ubuntu를 사용합니다.
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. GitHub 저장소의 코드를 가상 머신으로 가져옵니다.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 로컬의 Dockerfile을 사용하여 이미지를 빌드합니다.
+      #    (현재는 취약한 v1 Dockerfile을 사용합니다)
+      - name: Build Docker image
+        run: docker build -t hello-trivy-lab:ci-build .
+
+      # 3. (핵심) aquasecurity/trivy-action@master 액션을 사용해 스캔합니다.
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          # 방금 빌드한 이미지를 스캔 대상으로 지정합니다.
+          image-ref: 'hello-trivy-lab:ci-build'
+
+          # 스캔 결과를 GitHub 요약 페이지에서 볼 수 있도록 'table' 형식 사용
+          format: 'table'
+
+          # (가장 중요) CRITICAL 또는 HIGH 등급이 발견되면
+          # 워크플로우를 '실패(exit-code 1)'시킵니다.
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+          # (실무 팁) 아직 제조사 패치가 없는 취약점은 무시합니다.
+          #             (이 옵션이 없으면 패치 불가능한 취약점에도 빌드가 실패합니다)
+          ignore-unfixed: true
+
+          # 취약점(vuln)만 스캔합니다. (secret 등도 가능)
+          scanners: 'vuln'
